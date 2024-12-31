@@ -3,6 +3,7 @@
 namespace CMW\Package\LoginFastImplementation;
 
 use CMW\Manager\Package\IPackageConfig;
+use CMW\Manager\Package\PackageMenuType;
 
 class Package implements IPackageConfig
 {
@@ -13,7 +14,7 @@ class Package implements IPackageConfig
 
     public function version(): string
     {
-        return '1.0.0';
+        return '0.0.1';
     }
 
     public function authors(): array
@@ -34,13 +35,18 @@ class Package implements IPackageConfig
     public function menus(): ?array
     {
         return [
-            //TODO Settings
+            new PackageMenuType(
+                icon: 'fas fa-user-lock',
+                title: 'LoginFast',
+                url: 'loginfast-implementation/settings',
+                permission: 'loginfastimplementation.manage'
+            ),
         ];
     }
 
     public function requiredPackages(): array
     {
-        return ['Core'];
+        return ['Core', 'OverApi'];
     }
 
     /**
