@@ -4,6 +4,8 @@ namespace CMW\Controller\LoginFastImplementation\Api;
 
 use CMW\Controller\OverApi\OverApi;
 use CMW\Controller\OverApi\OverExternalApi;
+use CMW\Event\LoginFastImplementation\LoginFastSuccessEvent;
+use CMW\Manager\Events\Emitter;
 use CMW\Manager\Filter\FilterManager;
 use CMW\Manager\Package\AbstractController;
 use CMW\Manager\Requests\HttpMethodsType;
@@ -11,6 +13,7 @@ use CMW\Manager\Router\Link;
 use CMW\Model\LoginFastImplementation\LoginFastConfigModel;
 use CMW\Type\OverApi\RequestsErrorsTypes;
 use JetBrains\PhpStorm\NoReturn;
+use function base64_encode;
 use function is_null;
 use function time;
 use const FILTER_SANITIZE_EMAIL;
@@ -22,7 +25,7 @@ use const FILTER_SANITIZE_EMAIL;
  */
 class LoginFastApiController extends AbstractController
 {
-    #[NoReturn] #[Link("/", Link::GET, scope: '/api/loginfast')]
+    #[NoReturn] #[Link("/", Link::POST, scope: '/api/loginfast', secure: false)] //TODO Add xsrf integration
     private function apiLogin(): void
     {
         //Check client API key
@@ -44,10 +47,13 @@ class LoginFastApiController extends AbstractController
         $otpKey = $this->getClientOtpKey();
         $apiKey = $this->getClientApiKey();
 
-        if (!$this->sendLoginFastCallback($otpKey, $apiKey)) {
+        $mail = $this->sendLoginFastCallback($otpKey, $apiKey);
+
+        if (!$mail) {
             OverApi::returnError(RequestsErrorsTypes::INTERNAL_SERVER_ERROR, ['unable to send request']);
         }
 
+        Emitter::send(LoginFastSuccessEvent::class, $mail);
         OverApi::returnData(['status' => 1, 'timestamp' => time()]);
     }
 
@@ -62,11 +68,12 @@ class LoginFastApiController extends AbstractController
             HttpMethodsType::POST,
             'https://dash.loginfa.st/api/send',
             postFields: [
-                'mail' => $mail,
+                'mail' => base64_encode($mail),
             ],
             headers: [
                 "X-Api-Key: $apiKey",
-            ]
+            ],
+            isAssociative: true
         );
 
         return isset($res['status']) && $res['status'] === 1;
@@ -91,11 +98,11 @@ class LoginFastApiController extends AbstractController
      */
     private function getClientPostMail(): string
     {
-        if (!isset($_GET['mail'])) {
-            OverApi::returnError(RequestsErrorsTypes::WRONG_PARAMS);
+        if (!isset($_POST['mail'])) {
+            OverApi::returnError(RequestsErrorsTypes::WRONG_PARAMS, ['mail is missing']);
         }
 
-        $mail = FilterManager::filterData(base64_decode($_GET['mail']), 255, FILTER_SANITIZE_EMAIL);
+        $mail = FilterManager::filterInputStringPost('mail', 255, FILTER_SANITIZE_EMAIL);
 
         if (!FilterManager::isEmail($mail)) {
             OverApi::returnError(RequestsErrorsTypes::WRONG_PARAMS);
@@ -110,13 +117,19 @@ class LoginFastApiController extends AbstractController
     private function getClientOtpKey(): string
     {
         if (!isset($_GET['otp'])) {
-            OverApi::returnError(RequestsErrorsTypes::WRONG_PARAMS);
+            OverApi::returnError(RequestsErrorsTypes::WRONG_PARAMS, ['otp is missing']);
         }
 
         return FilterManager::filterInputStringGet('otp', 255);
     }
 
-    private function sendLoginFastCallback(string $otpKey, string $apiKey): bool
+    /**
+     * @param string $otpKey
+     * @param string $apiKey
+     * @return false|string
+     * @desc Return mail if success
+     */
+    private function sendLoginFastCallback(string $otpKey, string $apiKey): false|string
     {
         $res = OverExternalApi::send(
             HttpMethodsType::POST,
@@ -126,9 +139,14 @@ class LoginFastApiController extends AbstractController
             ],
             headers: [
                 "X-Api-Key: $apiKey",
-            ]
+            ],
+            isAssociative: true
         );
 
-        return isset($res['status']) && $res['status'] === 1;
+        if (!isset($res['status']) || $res['status'] !== 1) {
+            return false;
+        }
+
+        return $res['user']['mail'] ?? false;
     }
 }

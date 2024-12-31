@@ -13,18 +13,18 @@ class LoginFastUserEntity extends AbstractEntity
 {
     private int $id;
     private string $email;
-    private string $createdAd;
+    private string $createdAt;
 
     /**
      * @param int $id
      * @param string $email
-     * @param string $createdAd
+     * @param string $createdAt
      */
-    public function __construct(int $id, string $email, string $createdAd)
+    public function __construct(int $id, string $email, string $createdAt)
     {
         $this->id = $id;
         $this->email = $email;
-        $this->createdAd = $createdAd;
+        $this->createdAt = $createdAt;
     }
 
     /**
@@ -46,8 +46,8 @@ class LoginFastUserEntity extends AbstractEntity
     /**
      * @return string
      */
-    public function getCreatedAd(): string
+    public function getCreatedAt(): string
     {
-        return $this->createdAd;
+        return $this->createdAt;
     }
 }
