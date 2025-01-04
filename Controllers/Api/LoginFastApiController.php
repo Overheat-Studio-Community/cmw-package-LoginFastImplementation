@@ -62,7 +62,7 @@ class LoginFastApiController extends AbstractController
      * @param string $mail
      * @return bool
      */
-    private function sendLoginFastRequest(string $apiKey, string $mail): bool
+    public function sendLoginFastRequest(string $apiKey, string $mail): bool
     {
         $res = OverExternalApi::send(
             HttpMethodsType::POST,
@@ -82,7 +82,7 @@ class LoginFastApiController extends AbstractController
     /**
      * @return string
      */
-    private function getClientApiKey(): string
+    public function getClientApiKey(): string
     {
         $key = LoginFastConfigModel::getInstance()->getKey();
 
@@ -96,7 +96,7 @@ class LoginFastApiController extends AbstractController
     /**
      * @return string
      */
-    private function getClientPostMail(): string
+    public function getClientPostMail(): string
     {
         if (!isset($_POST['mail'])) {
             OverApi::returnError(RequestsErrorsTypes::WRONG_PARAMS, ['mail is missing']);
@@ -114,7 +114,7 @@ class LoginFastApiController extends AbstractController
     /**
      * @return string
      */
-    private function getClientOtpKey(): string
+    public function getClientOtpKey(): string
     {
         if (!isset($_GET['otp'])) {
             OverApi::returnError(RequestsErrorsTypes::WRONG_PARAMS, ['otp is missing']);
@@ -129,7 +129,7 @@ class LoginFastApiController extends AbstractController
      * @return false|string
      * @desc Return mail if success
      */
-    private function sendLoginFastCallback(string $otpKey, string $apiKey): false|string
+    public function sendLoginFastCallback(string $otpKey, string $apiKey): false|string
     {
         $res = OverExternalApi::send(
             HttpMethodsType::POST,
