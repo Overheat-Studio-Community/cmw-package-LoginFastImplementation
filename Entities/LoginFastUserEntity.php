@@ -3,6 +3,8 @@
 namespace CMW\Entity\LoginFastImplementation;
 
 use CMW\Manager\Package\AbstractEntity;
+use CMW\Manager\Security\EncryptManager;
+use CMW\Utils\Date;
 
 /**
  * Class: @LoginFastUserEntity
@@ -46,8 +48,24 @@ class LoginFastUserEntity extends AbstractEntity
     /**
      * @return string
      */
+    public function getEmailDecrypted(): string
+    {
+        return EncryptManager::decrypt($this->email);
+    }
+
+    /**
+     * @return string
+     */
     public function getCreatedAt(): string
     {
         return $this->createdAt;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCreatedAtFormatted(): string
+    {
+        return Date::formatDate($this->createdAt);
     }
 }
