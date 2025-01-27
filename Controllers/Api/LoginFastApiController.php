@@ -13,7 +13,6 @@ use CMW\Manager\Router\Link;
 use CMW\Model\LoginFastImplementation\LoginFastConfigModel;
 use CMW\Type\OverApi\RequestsErrorsTypes;
 use JetBrains\PhpStorm\NoReturn;
-use function base64_encode;
 use function is_null;
 use function time;
 use const FILTER_SANITIZE_EMAIL;
@@ -68,7 +67,7 @@ class LoginFastApiController extends AbstractController
             HttpMethodsType::POST,
             'https://dash.loginfa.st/api/send',
             postFields: [
-                'mail' => base64_encode($mail),
+                'mail' => $mail,
             ],
             headers: [
                 "X-Api-Key: $apiKey",
